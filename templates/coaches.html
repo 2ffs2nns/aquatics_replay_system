@@ -1,0 +1,70 @@
+<html>
+  <head>
+    <title>Coaches</title>
+    <script src="{{ url_for('static', filename='css/jquery.min.js') }}" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='css/socket.io.js') }}" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/coaches.css') }}">
+    <script type="text/javascript" charset="utf-8">
+        $(document).ready(function() {
+            var socket = io();
+            socket.on('record_response', function(msg) {
+                $('#log').append('<br>' + $('<div/>').text(msg.data).html());
+            })
+
+            $('form#record').submit(function(event) {
+                socket.emit('record_message', {data: 'broadcast triggered'});
+                return false;
+            });
+            socket.on('reset_response', function(msg) {
+                return false;
+              });
+
+            $('form#reset').submit(function(event) {
+                socket.emit('reset_message', {data: 'reset triggered'});
+                return false;
+            });
+            $('form#replay').submit(function(event) {
+                socket.emit('replay_message', {data: 'replay triggered'});
+                return false;
+            });
+        });
+    </script>
+<body>
+<div class="hero">
+  <nav role="navigation">
+  <div id="menuToggle">
+    <input type="checkbox" />
+    <span></span>
+    <span></span>
+    <span></span>
+
+    <ul id="menu">
+      <a href="#" target="_blank"><li>Config</li></a>
+    </ul>
+  </div>
+</nav>
+  <table class="content">
+    <tr>
+      <td>
+      <br>
+      <form class="input" id="record" method="POST" action="#/">
+        <input type="submit" value="RECORD">
+      </form>
+      </td>
+    </tr>
+    <tr>
+      <td>
+      <form class="input" id="reset" method="POST" action="#/">
+        <input type="submit" value="  RESET  " value>
+      </form>
+      </td>
+    </tr>
+    <tr>
+      <td>
+      <form class="input" id="replay" method="POST" action="#/">
+        <input type="submit" value=" REPLAY" value>
+      </form>
+      </td>
+    </tr>
+  </table>
+</div>
