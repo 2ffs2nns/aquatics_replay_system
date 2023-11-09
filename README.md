@@ -13,6 +13,7 @@ Decided to use `/etc/xdg/lxsession/LXDE-pi/autostart` as the startup config.
 @xset s off
 @xset -dpms
 @xset s noblank
+@unclutter -idle 0
 
 @/usr/bin/python /home/vjo/main.py &
 @/usr/bin/python /home/vjo/run_chromium.py

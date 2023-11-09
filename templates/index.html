@@ -26,9 +26,13 @@
                 socket.emit('reset_message', {data: 'reset triggered'});
                 return false;
             });
+
             socket.on('replay_response', function(msg) {
               document.getElementById("video").play();
+            });
 
+            socket.on('pause_response', function(msg) {
+              document.getElementById("video").pause();
             });
           });
     </script>
@@ -36,7 +40,7 @@
   <body width="100%" align="center">
       <table border="0">
       <tr>
-        <td class="logo"><img src="replays/vjo_logo.png" max-width="100%" width="70" height="auto"></td>
+        <td class="logo"><img src="{{ url_for('static', filename='css/vjo_logo.png') }}" max-width="100%" width="70" height="auto"></td>
         <td width="100%" align="center" class="meet_title"><h1>Vallejo Aquatics Replay System</h1></td>
       </tr>
     </table>
@@ -44,7 +48,7 @@
       <tr>
         <td width="100%">
           <div width="100%" id="video-feed" class="video">
-            <img width="100%" src="{{ url_for('video_feed') }}">
+            <img width="90%" src="{{ url_for('video_feed') }}">
           </div>
         </td>
       </tr>

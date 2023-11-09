@@ -15,8 +15,7 @@ def get_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.settimeout(0)
     try:
-        # doesn't even have to be reachable
-        s.connect(('10.254.254.254', 1))
+        s.connect(('10.42.0.1', 1))
         IP = s.getsockname()[0]
     except Exception:
         IP = '127.0.0.1'
@@ -41,9 +40,9 @@ async_mode = 'threading'
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 HOST_IP = get_ip()
-HOST_PORT = '80'
+HOST_PORT = '8000'
 REPLAY_WAIT_DURATION = 3
-REPLAY_DURATION = 10
+REPLAY_DURATION = 5
 REPLAY_PLAYBACK_RATE = 0.25
 thread = None
 thread_lock = Lock()
@@ -52,16 +51,17 @@ socketio = SocketIO(app, async_mode=async_mode)
 camera = lock_camera()
 
 def gen_frames():
-    # generate frame by frame from camera
     while True:
         success, frame = camera.read()
         if not success:
             break
         else:
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
+            # replaced frame with flipped/mirror
+            flipped = cv2.flip(frame,1)
+            ret, buffer = cv2.imencode('.jpg', flipped)
+            flipped = buffer.tobytes()
             yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+                   b'Content-Type: image/jpeg\r\n\r\n' + flipped + b'\r\n')
 
 @app.route("/coaches")
 def coaches():
@@ -77,11 +77,13 @@ def index():
 
 @socketio.on("record_message")
 def handle_broadcast(data):
+    recording_img = "<img id=\"video\" width=\"75%\" src=\"replays/css/recording1.png\">"
+    emit("record_response", {"data": recording_img }, broadcast=True)
     replay_filename = start_video(camera, REPLAY_DURATION)
     print('created replay: %s' % replay_filename)
     time.sleep(REPLAY_WAIT_DURATION)
 
-    vsettings = '<video id="video" width="100"'
+    vsettings = '<video id="video" width="77%"'
     vsrc = ' src="http://%s:%s/replays/%s" controls muted></video>' % (HOST_IP, HOST_PORT, replay_filename)
     jsscript = """
     <script id="replay" type="text/javascript">
@@ -101,6 +103,11 @@ def handle_reset_broadcast(data):
 def handle_replay_broadcast(data):
     print('replaying video...')
     emit("replay_response", {"data": "replay sent"}, broadcast=True)
+
+@socketio.on("pause_message")
+def handle_pause_broadcast(data):
+    print('pausing video...')
+    emit("pause_response", {"data": "pause sent"}, broadcast=True)
 
 
 if __name__ == "__main__":

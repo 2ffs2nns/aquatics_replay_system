@@ -27,8 +27,15 @@ def del_old_videos():
 
 def setup_camera():
     print("[INFO] starting cv2.VideoCapture(0)")
-    print("%s" % cv2.getBuildInformation())
     cap = cv2.VideoCapture(0)
+    # 1080p
+    # cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+    # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+    # 720p
+    # cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    print("init size: %s" % int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)))
+    print("fps: %s" % int(cap.get(cv2.CAP_PROP_FPS)))
 
     return cap
 
@@ -39,8 +46,8 @@ def play_recorded_video(replay_file):
     return cap
 
 
-def start_video(cap, start=True, duration=5):
-    print("[INFO] in setup_video")
+def start_video(cap, duration=5, start=True):
+    print("[INFO] in setup_video, duration=%s" % duration)
     replay_file_path = "%s/replays" % SCRIPT_PATH
     if not os.path.exists(replay_file_path):
         os.mkdir(replay_file_path)
@@ -50,7 +57,6 @@ def start_video(cap, start=True, duration=5):
             int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
             int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
         )
-        print("size: %s" % int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)))
 
         start_time = round(time.time())
         print("[INFO] %s starting new video_out" % start_time)
@@ -63,7 +69,9 @@ def start_video(cap, start=True, duration=5):
 
         while recording:
             ret, frame = cap.read()
-            video_out.write(frame)
+            # flipped/mirrored
+            flipped = cv2.flip(frame,1)
+            video_out.write(flipped)
 
             diff = get_current_time(start_time)
             if diff >= duration:

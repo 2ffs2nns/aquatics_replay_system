@@ -5,26 +5,22 @@
     <script src="{{ url_for('static', filename='css/socket.io.js') }}" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/coaches.css') }}">
     <script type="text/javascript" charset="utf-8">
-        $(document).ready(function() {
+         $(document).ready(function() {
             var socket = io();
-            socket.on('record_response', function(msg) {
-                $('#log').append('<br>' + $('<div/>').text(msg.data).html());
-            })
-
             $('form#record').submit(function(event) {
                 socket.emit('record_message', {data: 'broadcast triggered'});
                 return false;
             });
-            socket.on('reset_response', function(msg) {
-                return false;
-              });
-
             $('form#reset').submit(function(event) {
                 socket.emit('reset_message', {data: 'reset triggered'});
                 return false;
             });
             $('form#replay').submit(function(event) {
                 socket.emit('replay_message', {data: 'replay triggered'});
+                return false;
+            });
+            $('form#pause').submit(function(event) {
+                socket.emit('pause_message', {data: 'pause triggered'});
                 return false;
             });
         });
@@ -46,7 +42,6 @@
   <table class="content">
     <tr>
       <td>
-      <br>
       <form class="input" id="record" method="POST" action="#/">
         <input type="submit" value="RECORD">
       </form>
@@ -63,6 +58,13 @@
       <td>
       <form class="input" id="replay" method="POST" action="#/">
         <input type="submit" value=" REPLAY" value>
+      </form>
+      </td>
+    </tr>
+    <tr>
+      <td>
+      <form class="input" id="pause" method="POST" action="#/">
+        <input type="submit" value="  PAUSE " value>
       </form>
       </td>
     </tr>
