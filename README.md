@@ -34,8 +34,9 @@ numpy
 
 Connect the raspberry pi to a TV via HDMI and a usb webcam.
 
-Connect to the webserver and coaches page on your phone/mobile device. ie `http://192.168.1.10:5000/coaches`
+Connect to the webserver and coaches page on your phone/mobile device. ie `http://vars.local:8000/coaches`
 
 The `record` button will record the livestream for a default of 5secs.
 The `reset` button will return to the livestream view.
-The `replay` button will replay the last recorded video.
+The `replay` button will replay or continue to play the last recorded video/paused video.
+The `pause` button will pause the last recorded video.

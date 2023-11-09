@@ -13,18 +13,6 @@ def get_current_time(start_time):
     return diff
 
 
-def del_old_videos():
-    try:
-        print("[INFO] deleting old videos")
-        files = glob.glob('%s/replays/*.mp4' % SCRIPT_PATH) 
-        for f in files:
-            os.remove(f)
-
-    except Exception as e:
-        print("[ERROR] deleting old_videos")
-        print(e)
-
-
 def setup_camera():
     print("[INFO] starting cv2.VideoCapture(0)")
     cap = cv2.VideoCapture(0)
@@ -70,8 +58,8 @@ def start_video(cap, duration=5, start=True):
         while recording:
             ret, frame = cap.read()
             # flipped/mirrored
-            flipped = cv2.flip(frame,1)
-            video_out.write(flipped)
+            #flipped = cv2.flip(frame,1)
+            video_out.write(frame)
 
             diff = get_current_time(start_time)
             if diff >= duration:
@@ -80,7 +68,3 @@ def start_video(cap, duration=5, start=True):
                 recording = False
 
         return replay_file
-
-
-if __name__ == "__main__":
-    del_old_videos()

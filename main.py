@@ -5,23 +5,24 @@ from flask_socketio import SocketIO, emit
 from adhoc_capture import start_video
 from adhoc_capture import setup_camera
 from adhoc_capture import play_recorded_video
+from prep_ip import get_ip
 import cv2
 import fcntl
+import glob
 import os
 import time
 
-import socket
-def get_ip():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.settimeout(0)
+def del_old_videos():
     try:
-        s.connect(('10.42.0.1', 1))
-        IP = s.getsockname()[0]
-    except Exception:
-        IP = '127.0.0.1'
-    finally:
-        s.close()
-    return IP
+        print("[INFO] deleting old videos")
+        files = glob.glob('%s/replays/*.mp4' % SCRIPT_PATH)
+        for f in files:
+            os.remove(f)
+
+    except Exception as e:
+        print("[ERROR] deleting old_videos")
+        print(e)
+
 
 def lock_camera():
     lock_file = open("/tmp/vasta.lock", "w")
@@ -41,8 +42,8 @@ async_mode = 'threading'
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 HOST_IP = get_ip()
 HOST_PORT = '8000'
-REPLAY_WAIT_DURATION = 3
-REPLAY_DURATION = 5
+REPLAY_WAIT_DURATION = 2
+REPLAY_DURATION = 4.5
 REPLAY_PLAYBACK_RATE = 0.25
 thread = None
 thread_lock = Lock()
@@ -56,12 +57,12 @@ def gen_frames():
         if not success:
             break
         else:
-            # replaced frame with flipped/mirror
-            flipped = cv2.flip(frame,1)
-            ret, buffer = cv2.imencode('.jpg', flipped)
-            flipped = buffer.tobytes()
+            # replace frame with flipped to mirror
+            #flipped = cv2.flip(frame,1)
+            ret, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
             yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + flipped + b'\r\n')
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 @app.route("/coaches")
 def coaches():
@@ -111,5 +112,6 @@ def handle_pause_broadcast(data):
 
 
 if __name__ == "__main__":
+    del_old_videos()
     HOST_IP = get_ip()
     socketio.run(app, port=HOST_PORT, host=HOST_IP, allow_unsafe_werkzeug=True)
