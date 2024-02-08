@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>VARS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="{{ url_for('static', filename='css/jquery.min.js') }}" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='css/socket.io.js') }}" crossorigin="anonymous"></script>
+    <script type="text/javascript" charset="utf-8">
+        $(document).ready(function() {
+            // Broadcast response from server is handled here
+            var socket = io();
+            socket.on('record_response', function(msg) {
+              $('#video-feed').html(msg.data);
+              });
+
+            $('form#broadcast').submit(function(event) {
+                socket.emit('broadcast_message', {data: 'broadcast triggered'});
+                return false;
+            });
+            socket.on('reset_response', function(msg) {
+              location.replace("{{ url_for('index') }}")
+              //location.reload()
+              });
+
+            $('form#reset').submit(function(event) {
+                socket.emit('reset_message', {data: 'reset triggered'});
+                return false;
+            });
+            socket.on('replay_response', function(msg) {
+              document.getElementById("video").play();
+
+            });
+          });
+    </script>
+  </head>
+  <body width="100%" align="center">
+      <table border="0">
+      <tr>
+        <td class="logo"><img src="replays/css/vjo_logo.png" max-width="100%" width="70" height="auto"></td>
+        <td width="100%" align="center" class="meet_title"><h1>Vallejo Aquatics Replay System</h1></td>
+      </tr>
+    </table>
+    <table width="100%" align="center">
+      <tr>
+        <td width="100%">
+          <div width="100%" id="video-feed" class="video">
+            <img width="100%" src="{{ url_for('video_feed') }}">
+          </div>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

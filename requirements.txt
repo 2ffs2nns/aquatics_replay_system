@@ -1,0 +1,6 @@
+flask
+flask-socketio
+opencv-python==4.5.3.56
+numpy>=1.20
+cvxpy>=1
+psutils
