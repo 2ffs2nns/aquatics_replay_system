@@ -2,14 +2,16 @@
 from threading import Lock
 from flask import Flask, render_template, Response
 from flask_socketio import SocketIO, emit
-from adhoc_capture import start_video
+from adhoc_capture import start_main_video
 from adhoc_capture import setup_camera
 from adhoc_capture import play_recorded_video
 from prep_ip import get_ip
 import cv2
+import configparser
 import fcntl
 import glob
 import os
+import psutil
 import time
 
 def del_old_videos():
@@ -39,12 +41,17 @@ def lock_camera():
 # threading seems to work better than None
 async_mode = 'threading'
 
+# support writing the config
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
+config = configparser.ConfigParser()
+config.read('%s/config.ini' % SCRIPT_PATH)
+
 HOST_IP = get_ip()
-HOST_PORT = '8000'
-REPLAY_WAIT_DURATION = 2
-REPLAY_DURATION = 4.5
-REPLAY_PLAYBACK_RATE = 0.25
+HOST_PORT = int(config['DEFAULT']['host_port'])
+REPLAY_WAIT_DURATION = int(config['DEFAULT']['replay_wait_duration'])
+REPLAY_DURATION = int(config['DEFAULT']['replay_duration'])
+REPLAY_PLAYBACK_RATE = config['DEFAULT']['replay_playback_rate']
+
 thread = None
 thread_lock = Lock()
 app = Flask(__name__, static_folder=SCRIPT_PATH + '/replays')
@@ -58,8 +65,8 @@ def gen_frames():
             break
         else:
             # replace frame with flipped to mirror
-            #flipped = cv2.flip(frame,1)
-            ret, buffer = cv2.imencode('.jpg', frame)
+            flipped = cv2.flip(frame,1)
+            ret, buffer = cv2.imencode('.jpg', flipped)
             frame = buffer.tobytes()
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
@@ -76,11 +83,16 @@ def video_feed():
 def index():
     return render_template("index.html", async_mode=socketio.async_mode)
 
+@app.route("/stats")
+def stats():
+    loadavg = psutil.getloadavg()
+    cpu = psutil.cpu_percent(2)
+
 @socketio.on("record_message")
 def handle_broadcast(data):
-    recording_img = "<img id=\"video\" width=\"75%\" src=\"replays/css/recording1.png\">"
+    recording_img = "<img id=\"video\" width=\"75%\" src=\"replays/css/recording1.gif\">"
     emit("record_response", {"data": recording_img }, broadcast=True)
-    replay_filename = start_video(camera, REPLAY_DURATION)
+    replay_filename = start_main_video(camera, REPLAY_DURATION)
     print('created replay: %s' % replay_filename)
     time.sleep(REPLAY_WAIT_DURATION)
 
